@@ -19,66 +19,66 @@ const types = {
 };
 
 function mockOutput(note, task) {
-  const content = note?.content || "This note needs more content.";
+  const content = note?.content || "Cette note a besoin de plus de contenu.";
   const firstSentence = content.split(/[.!?]\s/).filter(Boolean)[0];
   if (task === "quiz") {
     return {
       title: "Quiz",
       body: [
-        "1. What is the central idea of this note?",
-        "2. Which concept should be defined with precision?",
-        `3. Give one example based on: ${firstSentence}.`
+        "1. Quelle est l'idée centrale de cette note ?",
+        "2. Quel concept doit être défini avec précision ?",
+        `3. Donne un exemple basé sur : ${firstSentence}.`
       ].join("\n"),
-      keyIdea: "Good quiz questions test recall and application.",
-      revisionTip: "Answer first, then compare with the original note."
+      keyIdea: "Un bon quiz teste la mémorisation et l'application.",
+      revisionTip: "Réponds d'abord, puis compare avec la note originale."
     };
   }
   if (task === "flashcards") {
     return {
-      title: "Flashcards",
+      title: "Cartes mémoire",
       body: [
-        `Front: What is the main idea of ${note?.title || "this note"}?`,
-        `Back: ${firstSentence}.`,
-        "Front: How can you test yourself?",
-        "Back: Explain one example without reading the note."
+        `Recto : Quelle est l'idée principale de ${note?.title || "cette note"} ?`,
+        `Verso : ${firstSentence}.`,
+        "Recto : Comment peux-tu te tester ?",
+        "Verso : Explique un exemple sans relire la note."
       ].join("\n"),
-      keyIdea: "Flashcards should stay short and reviewable.",
-      revisionTip: "Use spaced repetition before the exam."
+      keyIdea: "Les cartes mémoire doivent rester courtes et faciles à revoir.",
+      revisionTip: "Utilise la répétition espacée avant l'examen."
     };
   }
   if (task === "explain") {
     return {
-      title: "Explanation",
-      body: `${firstSentence}. Explain it by naming the concept, why it matters, and one concrete example.`,
-      keyIdea: "A simple explanation is easier to defend during the presentation.",
-      revisionTip: "Try explaining it in under one minute."
+      title: "Explication",
+      body: `${firstSentence}. Explique en nommant le concept, son importance et un exemple concret.`,
+      keyIdea: "Une explication simple est plus facile à défendre pendant la présentation.",
+      revisionTip: "Essaie de l'expliquer à voix haute en moins d'une minute."
     };
   }
   return {
-    title: "Summary",
+    title: "Résumé",
     body: `${firstSentence}.`,
-    keyIdea: "Focus on the concept, the mechanism, and one example.",
-    revisionTip: "Rewrite the note as three bullet points before the exam."
+    keyIdea: "Concentre-toi sur le concept, le mécanisme et un exemple.",
+    revisionTip: "Réécris la note en trois points avant l'examen."
   };
 }
 
 function buildPrompt(note, task, instruction) {
   const taskInstruction = {
-    summary: "Summarize this student note in concise study-friendly bullet points.",
-    quiz: "Create five concise quiz questions with short answers from this student note.",
-    explain: "Explain this note simply for a first-year computer science student.",
-    flashcards: "Create useful flashcards from this note. Use Front and Back labels."
-  }[task] || "Help the student revise this note.";
+    summary: "Résume cette note d'étudiant en points courts et utiles pour réviser.",
+    quiz: "Crée cinq questions de quiz concises avec des réponses courtes à partir de cette note.",
+    explain: "Explique cette note simplement pour un étudiant de première année en informatique.",
+    flashcards: "Crée des cartes mémoire utiles à partir de cette note. Utilise les libellés Recto et Verso."
+  }[task] || "Aide l'étudiant à réviser cette note.";
 
   return [
-    "You are MemoCoach AI, a precise study assistant for ESISA students.",
+    "Tu es MemoCoach AI, un assistant de révision précis pour les étudiants de l'ESISA.",
     taskInstruction,
-    "Keep the answer practical, clear, and exam-oriented.",
-    instruction ? `Extra instruction from the student: ${instruction}` : "",
+    "Réponds en français. Reste pratique, clair et orienté examen.",
+    instruction ? `Instruction supplémentaire de l'étudiant : ${instruction}` : "",
     "",
-    `Course: ${note?.course || "Unknown course"}`,
-    `Title: ${note?.title || "Untitled note"}`,
-    "Note:",
+    `Cours : ${note?.course || "Cours inconnu"}`,
+    `Titre : ${note?.title || "Note sans titre"}`,
+    "Note :",
     note?.content || ""
   ].filter(Boolean).join("\n");
 }
@@ -127,7 +127,7 @@ async function geminiErrorMessage(response) {
 
 function formatGeminiError(model, status, detail = "") {
   const message = String(detail || "").replace(/\s+/g, " ").trim().slice(0, 180);
-  return `Gemini returned HTTP ${status} for ${model}${message ? `: ${message}` : ""}.`;
+  return `Gemini a renvoyé HTTP ${status} pour ${model}${message ? ` : ${message}` : ""}.`;
 }
 
 async function aiOutput(note, task, instruction, apiKeyOverride = "", modelOverride = "") {
@@ -139,7 +139,7 @@ async function aiOutput(note, task, instruction, apiKeyOverride = "", modelOverr
       output: mockOutput(note, task),
       provider: "mock",
       ok: false,
-      message: "AI is in demo mode. Add your API key above to unlock real summaries."
+      message: "L'IA est en mode démo. Ajoute ta clé API pour activer les vrais résumés."
     };
   }
 
@@ -166,20 +166,20 @@ async function aiOutput(note, task, instruction, apiKeyOverride = "", modelOverr
       const providerJson = await providerResponse.json();
       const text = parseGeminiText(providerJson);
       if (!text) {
-        lastStatus = "Gemini returned an empty answer.";
+        lastStatus = "Gemini a renvoyé une réponse vide.";
         continue;
       }
 
       return {
         output: {
-          title: task === "quiz" ? "Quiz" : task === "flashcards" ? "Flashcards" : task === "explain" ? "Explanation" : "Summary",
+          title: task === "quiz" ? "Quiz" : task === "flashcards" ? "Cartes mémoire" : task === "explain" ? "Explication" : "Résumé",
           body: text,
-          keyIdea: task === "quiz" ? "Use the questions to test recall before checking answers." : "",
-          revisionTip: "Verify the AI answer against your original note."
+          keyIdea: task === "quiz" ? "Utilise les questions pour tester ta mémoire avant de regarder les réponses." : "",
+          revisionTip: "Vérifie la réponse de l'IA avec ta note originale."
         },
         provider: "gemini",
         ok: true,
-        message: `Generated with Gemini model ${model}.`
+        message: `Généré avec le modèle Gemini ${model}.`
       };
     }
 
@@ -187,14 +187,14 @@ async function aiOutput(note, task, instruction, apiKeyOverride = "", modelOverr
       output: mockOutput(note, task),
       provider: "mock",
       ok: false,
-      message: `${lastStatus || "Gemini could not verify the key."} Check the key and try again.`
+      message: `${lastStatus || "Gemini n'a pas pu vérifier la clé."} Vérifie la clé et réessaie.`
     };
   } catch {
     return {
       output: mockOutput(note, task),
       provider: "mock",
       ok: false,
-      message: "AI is in demo mode. Add your API key above to unlock real summaries."
+      message: "L'IA est en mode démo. Ajoute ta clé API pour activer les vrais résumés."
     };
   }
 }
@@ -234,8 +234,8 @@ createServer(async (request, response) => {
     createReadStream(filePath).pipe(response);
   } catch {
     response.writeHead(404);
-    response.end("Not found");
+    response.end("Introuvable");
   }
 }).listen(port, "127.0.0.1", () => {
-  console.log(`MemoCoach web app running at http://127.0.0.1:${port}`);
+  console.log(`Application web MemoCoach lancée sur http://127.0.0.1:${port}`);
 });
