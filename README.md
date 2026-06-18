@@ -63,7 +63,7 @@ For real Gemini AI on Vercel, add:
 
 ```text
 GEMINI_API_KEY=your_google_ai_studio_key
-GEMINI_MODEL=gemini-2.0-flash-lite
+GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
 See [docs/vercel-deployment.md](docs/vercel-deployment.md).
@@ -115,9 +115,9 @@ MEMOCOACH_DB=data/local.db
 MEMOCOACH_AI_MOCK=1
 AI_PROVIDER_URL=https://your-provider.example/v1/chat/completions
 AI_API_KEY=replace-with-your-key
-AI_MODEL=gemini-2.0-flash-lite
+AI_MODEL=gemini-3.1-flash-lite
 GEMINI_API_KEY=replace-with-your-gemini-key
-GEMINI_MODEL=gemini-2.0-flash-lite
+GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
 Use `MEMOCOACH_AI_MOCK=1` for offline demos. Remove it or set it to `0` when testing a real provider.

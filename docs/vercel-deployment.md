@@ -32,7 +32,7 @@ Set these in the Vercel dashboard to use Gemini instead of mock mode:
 
 ```text
 GEMINI_API_KEY=your-google-ai-studio-key
-GEMINI_MODEL=gemini-2.0-flash-lite
+GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
 Without those variables, the web app uses deterministic mock AI output so the demo still works.

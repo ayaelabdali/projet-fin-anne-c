@@ -1,6 +1,7 @@
 const STORAGE_KEY = "memocoach-web-state-v4";
 const OLD_STORAGE_KEYS = ["memocoach-web-state-v3", "memocoach-web-state-v2", "memocoach-web-state-v1"];
 const DEMO_AI_MESSAGE = "AI is in demo mode. Add your API key above to unlock real summaries.";
+const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
 
 const seedNotes = [
   {
@@ -985,14 +986,14 @@ function renderCalendarView() {
 
 function renderSettingsView() {
   const statusTone = state.connectionStatus === "success" ? "success" : state.connectionStatus === "error" ? "error" : "demo";
-  const statusTitle = state.connectionStatus === "success" ? "Live AI is connected" : state.connectionStatus === "error" ? "Connection failed" : "Demo mode";
+  const statusTitle = state.connectionStatus === "success" ? "Live AI is connected" : state.connectionStatus === "error" ? "Connection failed" : state.connectionStatus === "testing" ? "Checking connection" : "Demo mode";
   return `
     <section class="page-view">
       <div class="page-heading">
         <div>
           <span class="eyebrow">${icon("settings", 16)} Project setup</span>
           <h1>Settings</h1>
-          <p>Paste your Gemini key once, test it, and MemoCoach will use real AI summaries in this browser.</p>
+          <p>Add your Gemini key in Vercel, or paste it once here for a local browser demo.</p>
         </div>
       </div>
 
@@ -1011,7 +1012,7 @@ function renderSettingsView() {
               <button class="primary-action" data-action="save-api-key" ${state.connectionBusy ? "disabled" : ""}>${state.connectionBusy ? "Testing..." : "Save & test"}</button>
             </div>
           </div>
-          <p class="settings-note">Model: <code>gemini-2.0-flash-lite</code>, with <code>gemini-1.5-flash</code> as fallback.</p>
+          <p class="settings-note">Default model: <code>${DEFAULT_GEMINI_MODEL}</code>, with current Gemini Flash fallbacks server-side.</p>
         </section>
 
         <section class="settings-panel panel-surface status-panel">
@@ -1030,7 +1031,7 @@ function renderSettingsView() {
           <h2>Vercel environment</h2>
           <p>For production, add this variable in Vercel too:</p>
           <pre>GEMINI_API_KEY=your_key
-GEMINI_MODEL=gemini-2.0-flash-lite</pre>
+GEMINI_MODEL=${DEFAULT_GEMINI_MODEL}</pre>
         </section>
 
         <section class="settings-panel panel-surface">
@@ -1391,20 +1392,10 @@ async function generate(task) {
 }
 
 async function testConnection() {
-  if (!state.apiKey.trim()) {
-    state.connectionStatus = "demo";
-    state.connectionMessage = DEMO_AI_MESSAGE;
-    state.provider = "mock";
-    state.apiMessage = DEMO_AI_MESSAGE;
-    state.notice = "Add an API key first";
-    persist();
-    render();
-    return;
-  }
-
+  const hasBrowserKey = Boolean(state.apiKey.trim());
   state.connectionBusy = true;
   state.connectionStatus = "testing";
-  state.connectionMessage = "Testing your Gemini key...";
+  state.connectionMessage = hasBrowserKey ? "Testing your Gemini key..." : "Testing server Gemini configuration...";
   state.notice = "";
   render();
 
@@ -1419,12 +1410,13 @@ async function testConnection() {
   );
   state.provider = response.provider || "mock";
   const success = state.provider === "gemini" && response.ok !== false;
-  state.connectionStatus = success ? "success" : "error";
+  const unconfigured = !hasBrowserKey && (response.message || DEMO_AI_MESSAGE) === DEMO_AI_MESSAGE;
+  state.connectionStatus = success ? "success" : unconfigured ? "demo" : "error";
   state.connectionMessage = success ? "Success. Live AI is ready for summaries, quizzes, and flashcards." : (response.message || DEMO_AI_MESSAGE);
   state.apiMessage = state.connectionMessage;
   state.aiResult = response.output;
   state.connectionBusy = false;
-  state.notice = success ? "Gemini key works" : "Gemini key failed";
+  state.notice = success ? "Gemini key works" : unconfigured ? "Add an API key first" : "Gemini key failed";
   addEvent(selectedNote().id, "Connection Test", state.provider, state.connectionMessage);
   persist();
   render();
@@ -1442,7 +1434,6 @@ async function requestAi(note, task, options = {}) {
         task,
         instruction: options.test ? "Return a short success response for connection testing." : state.assistantPrompt,
         apiKey: state.apiKey || "",
-        model: "gemini-2.0-flash-lite",
         test: Boolean(options.test)
       }),
       signal: controller.signal

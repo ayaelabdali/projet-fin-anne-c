@@ -91,10 +91,48 @@ function parseGeminiText(payload) {
     .trim();
 }
 
+const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
+const GEMINI_MODEL_FALLBACKS = [
+  DEFAULT_GEMINI_MODEL,
+  "gemini-2.5-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-2.5-flash"
+];
+
+function normalizeGeminiModel(model) {
+  return String(model || "").trim().replace(/^models\//, "");
+}
+
+function geminiModels(modelOverride = "") {
+  const preferredModel = normalizeGeminiModel(modelOverride || process.env.GEMINI_MODEL || process.env.AI_MODEL);
+  return Array.from(new Set([preferredModel, ...GEMINI_MODEL_FALLBACKS].filter(Boolean)));
+}
+
+async function geminiErrorMessage(response) {
+  let raw = "";
+  try {
+    raw = await response.text();
+  } catch {
+    return "";
+  }
+
+  if (!raw) return "";
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed?.error?.message || parsed?.message || "";
+  } catch {
+    return raw;
+  }
+}
+
+function formatGeminiError(model, status, detail = "") {
+  const message = String(detail || "").replace(/\s+/g, " ").trim().slice(0, 180);
+  return `Gemini returned HTTP ${status} for ${model}${message ? `: ${message}` : ""}.`;
+}
+
 async function aiOutput(note, task, instruction, apiKeyOverride = "", modelOverride = "") {
-  const apiKey = apiKeyOverride || process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
-  const preferredModel = modelOverride || process.env.GEMINI_MODEL || process.env.AI_MODEL || "gemini-2.0-flash-lite";
-  const models = Array.from(new Set([preferredModel, "gemini-1.5-flash"].filter(Boolean)));
+  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY || apiKeyOverride;
+  const models = geminiModels(modelOverride);
 
   if (!apiKey) {
     return {
@@ -121,7 +159,7 @@ async function aiOutput(note, task, instruction, apiKeyOverride = "", modelOverr
       });
 
       if (!providerResponse.ok) {
-        lastStatus = `Gemini returned HTTP ${providerResponse.status}.`;
+        lastStatus = formatGeminiError(model, providerResponse.status, await geminiErrorMessage(providerResponse));
         continue;
       }
 

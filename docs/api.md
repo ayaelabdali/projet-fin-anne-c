@@ -11,7 +11,7 @@ MemoCoach has two AI paths:
 |---|---:|---|
 | `MEMOCOACH_AI_MOCK` | No | Set to `1`, `true`, or `yes` to force offline mock output. |
 | `GEMINI_API_KEY` | Yes for web live AI | Google AI Studio Gemini API key for Vercel/local server. |
-| `GEMINI_MODEL` | No | Defaults to `gemini-2.0-flash-lite`, with `gemini-1.5-flash` as fallback. |
+| `GEMINI_MODEL` | No | Defaults to `gemini-3.1-flash-lite`, with current Gemini Flash models as fallbacks. |
 | `AI_PROVIDER_URL` | Yes for live calls | Chat completion endpoint URL. |
 | `AI_API_KEY` | Yes for live calls | Bearer token for the provider. |
 | `AI_MODEL` | Provider-specific | Model name expected by the provider. |
@@ -22,10 +22,10 @@ MemoCoach has two AI paths:
 ```bash
 export MEMOCOACH_AI_MOCK=0
 export GEMINI_API_KEY="your-gemini-key"
-export GEMINI_MODEL="gemini-2.0-flash-lite"
+export GEMINI_MODEL="gemini-3.1-flash-lite"
 export AI_PROVIDER_URL="https://api.example.com/v1/chat/completions"
 export AI_API_KEY="your-secret-key"
-export AI_MODEL="gemini-2.0-flash-lite"
+export AI_MODEL="gemini-3.1-flash-lite"
 ```
 
 Do not commit real keys.
