@@ -462,10 +462,10 @@ function renderSidebar() {
 
       <div class="sidebar-footer">
         <button class="student" data-action="nav" data-view="Settings">
-          <div class="avatar">AM</div>
+          <div class="avatar">DM</div>
           <span>
-            <strong>Alex Martin</strong>
-            <small>alex.martin@uni.edu</small>
+            <strong>Douae Mourabit</strong>
+            <small>douae.mourabit@esisa.ac.ma</small>
           </span>
         </button>
         <div class="mini-status">
